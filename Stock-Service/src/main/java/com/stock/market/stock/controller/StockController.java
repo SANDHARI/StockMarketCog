@@ -1,29 +1,15 @@
 package com.stock.market.stock.controller;
 
-import com.stock.market.stock.domain.StockPrice;
+
 import com.stock.market.stock.model.StockPriceDTO;
 import com.stock.market.stock.repository.StockPriceRepository;
 import com.stock.market.stock.service.StockPriceService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.MatchOperation;
-import org.springframework.data.mongodb.core.aggregation.SortOperation;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.format.annotation.DateTimeFormat;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,9 +21,7 @@ public class StockController {
     
     @Autowired
     private StockPriceRepository stockPriceRepository;
-    
-    @Autowired
-    private MongoTemplate mongoTemplate;
+  
 
     public StockController(StockPriceService stockPriceService) {
         this.stockPriceService = stockPriceService;
@@ -52,7 +36,7 @@ public class StockController {
     }
     
     
-    @GetMapping("/stock/add/{companyCode}/{startDate}/{endDate}")
+    @GetMapping("/stock/get/{companyCode}/{startDate}/{endDate}")
     public ResponseEntity<?> fetchStockPrice(@PathVariable("companyCode") String companyCode,
                                            @PathVariable("startDate") String startDate,
                                            @PathVariable("endDate") String endDate,
@@ -71,10 +55,7 @@ public class StockController {
         return new ResponseEntity<>(stockPriceService.getStockPriceDetails(), HttpStatus.OK);
     }
     
-    @GetMapping("/stock/agg")
-    public ResponseEntity<?> getStockAgg(HttpServletRequest request) {
-        return new ResponseEntity<>(stockPriceService.getStockPriceDetailsAgg(), HttpStatus.OK);
-    }
+   
     
 
     

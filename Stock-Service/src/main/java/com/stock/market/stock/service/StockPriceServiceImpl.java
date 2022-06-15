@@ -1,6 +1,8 @@
 package com.stock.market.stock.service;
 
 import com.stock.market.stock.domain.StockPrice;
+import com.stock.market.stock.integration.CompanyService;
+import com.stock.market.stock.model.Company;
 import com.stock.market.stock.model.StockPriceDTO;
 import com.stock.market.stock.model.StockPriceResponseDTO;
 import com.stock.market.stock.repository.StockPriceRepository;
@@ -8,7 +10,7 @@ import com.stock.market.stock.utils.DateUtils;
 
 import java.util.List;
 
-
+import org.apache.commons.lang.StringUtils;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,26 +25,30 @@ import org.springframework.stereotype.Service;
 @Service
 public class StockPriceServiceImpl implements StockPriceService {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(StockPriceServiceImpl.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(StockPriceServiceImpl.class);
 
-    private final StockPriceRepository stockPriceRepository;
+	private final StockPriceRepository stockPriceRepository;
 
-    public StockPriceServiceImpl(StockPriceRepository stockPriceRepository) {
-        this.stockPriceRepository = stockPriceRepository;
-    }
-    
-    @Autowired
-    MongoTemplate mongoTemplate;
+	public StockPriceServiceImpl(StockPriceRepository stockPriceRepository) {
+		this.stockPriceRepository = stockPriceRepository;
+	}
 
-   
-    @Override
-    public void addStockPrice(String companyCode, StockPriceDTO stockPriceDTO) {
-        StockPrice stockPrice = new StockPrice();
-        stockPrice.setStockPrice(stockPriceDTO.getStockPrice());
-        stockPrice.setCompanyCode(companyCode);
-        stockPriceRepository.save(stockPrice);
-    }
+	@Autowired
+	private MongoTemplate mongoTemplate;
 
+	@Autowired
+	private CompanyService companyService;
+
+	@Override
+	public void addStockPrice(String companyCode, StockPriceDTO stockPriceDTO) {
+		Company companyDetails = companyService.getCompanyDetails(companyCode);
+		if (!StringUtils.isEmpty(companyDetails.getCode())) {
+			StockPrice stockPrice = new StockPrice();
+			stockPrice.setStockPrice(stockPriceDTO.getStockPrice());
+			stockPrice.setCompanyCode(companyCode);
+			stockPriceRepository.save(stockPrice);
+		}
+	}
 
 	@Override
 	public StockPriceResponseDTO getStockPriceDetails(String companyCode, String startDate, String endDate) {
@@ -50,15 +56,15 @@ public class StockPriceServiceImpl implements StockPriceService {
 				DateUtils.convertStringToLocalDateTime(startDate), DateUtils.convertStringToLocalDateTime(endDate));
 		StockPriceResponseDTO stockResponseDTO = new StockPriceResponseDTO();
 		stockResponseDTO.setStockPrices(stockPrices);
-		MatchOperation matchOpaOperation = Aggregation.match(Criteria.where("companyCode").is(companyCode).andOperator(
+		MatchOperation matchOperation = Aggregation.match(Criteria.where("companyCode").is(companyCode).andOperator(
 				Criteria.where("createdDate").gte(DateUtils.convertStringToLocalDateTime(startDate)),
 				Criteria.where("createdDate").lt(DateUtils.convertStringToLocalDateTime(endDate))));
-		Aggregation aggregation = Aggregation.newAggregation(matchOpaOperation, Aggregation.group().avg("$stockPrice")
+		Aggregation aggregation = Aggregation.newAggregation(matchOperation, Aggregation.group().avg("$stockPrice")
 				.as("avgPrice").max("$stockPrice").as("maxPrice").min("$stockPrice").as("minPrice"));
 		AggregationResults<Document> document = mongoTemplate.aggregate(aggregation, "stockPrice", Document.class);
-		if(document != null && document.getRawResults() != null && document.getRawResults().get("results") != null) {
-			List<Document> results = (List<Document>)document.getRawResults().get("results");
-			if(!results.isEmpty()) {
+		if (document != null && document.getRawResults() != null && document.getRawResults().get("results") != null) {
+			List<Document> results = (List<Document>) document.getRawResults().get("results");
+			if (!results.isEmpty()) {
 				stockResponseDTO.setAverage(results.get(0).get("avgPrice", Double.class));
 				stockResponseDTO.setMaxValue(results.get(0).get("maxPrice", Double.class));
 				stockResponseDTO.setMinValue(results.get(0).get("minPrice", Double.class));
@@ -69,10 +75,8 @@ public class StockPriceServiceImpl implements StockPriceService {
 
 	@Override
 	public List<StockPrice> getStockPriceDetails() {
-		
+
 		return stockPriceRepository.findAll();
 	}
 
-    
-    
 }

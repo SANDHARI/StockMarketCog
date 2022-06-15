@@ -162,6 +162,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         LOGGER.error(bodyOfResponse, ex);
         return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
+    
+    @ExceptionHandler({IntegrationException.class})
+    public ResponseEntity<Object> handleIntegrationExcpetion(final IntegrationException ex, final WebRequest request) {
+    	LOGGER.error("Error message: ", ex);
+        final ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getLocalizedMessage(),
+                "Status Code: "+ex.getStatus()+" User Message: "+ex.getUserMessage());
+        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+    }
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<Object> handleAll(final Exception ex, final WebRequest request) {

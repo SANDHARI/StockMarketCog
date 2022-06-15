@@ -1,4 +1,4 @@
-package com.stock.market.company;
+package com.stock.market.gatewayservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,10 +7,10 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-public class CompanyServiceApplication {
+public class GatewayServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(CompanyServiceApplication.class, args);
+		SpringApplication.run(GatewayServiceApplication.class, args);
 	}
 
 }
